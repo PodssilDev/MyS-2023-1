@@ -33,6 +33,10 @@ void draw() {
   for (Person person : people) {
     person.update();
     ellipse(person.position.x, person.position.y, 7.5, 7.5);
+    
+    if (persona.isOutsideRoom()) {
+      personas.remove(i);
+    }
   }
 }
   
