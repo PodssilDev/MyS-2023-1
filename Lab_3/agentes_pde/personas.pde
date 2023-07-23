@@ -1,91 +1,134 @@
-class Person {
-  PVector position;
-  PVector velocity;
-  PVector direction;
-  float maxForce;
-  float maxSpeed;
-  float radius;
-  float magnitude;
+class Persona {
+  PVector posicion;
+  PVector velocidad;
+  float maxFuerza;
+  float maxVelocidad;
+  float radio;
   
-  Person() {
-    int y = int(random(15, 486));
-    position = new PVector(5, y);
-    direction = new PVector(1, 0);
-    velocity = new PVector();
-    magnitude = 5.0;
-    maxSpeed = 2.0;
-    maxForce = 0.03;
-    radius = 7.5;
+  // Constructor
+  Persona() {
+    // Se asume que todas las personas comienzan con x igual a 5 e y igual a un número en el rango [15, 485]
+    posicion = new PVector(5, random(15, 486));
+    velocidad = new PVector();
+    maxVelocidad = 2.0;
+    maxFuerza = 0.03;
+    radio = 7.5;
   }
   
+  // Descripción: Actualiza la dirección de movimiento, velocidad y posición de una persona.
   void update() {
-    PVector target = getTarget();
-    PVector desired = PVector.sub(target, position);
-    desired.normalize();
-    desired.mult(maxSpeed);
-
-    PVector steer = PVector.sub(desired, velocity);
-    steer.limit(maxForce);
-
-    velocity.add(steer);
-    velocity.limit(maxSpeed);
-    
-    position.add(velocity);
-    
-    checkCollisionsWithPilares();
-    applyRepulsionBetweenPersons();
+    PVector direccionDeseada = getDireccionDeseada();
+    // Calcula la dirección necesaria para alinear el movimiento con la dirección deseada
+    PVector direccion = PVector.sub(direccionDeseada, velocidad);
+    direccion.limit(maxFuerza);
+    // Cambiar velocidad en torno a la dirección que no supere la velocidad máxima
+    velocidad.add(direccion);
+    velocidad.limit(maxVelocidad);
+    // Actualiza la posición
+    posicion.add(velocidad);
+    applyRepulsion();
   }
-
-  PVector getTarget() {
-    if (position.y <= 224) {
-      return new PVector(600, 224);
-    } else if (224 < position.y && position.y < 276) {
-      return new PVector(600, position.y);
+  
+  // Descripción: Obtiene la dirección deseada de movimiento según la posición actual de una persona. 
+  // Salida: Vector que indica hacia donde se dirigue la dirección deseada de la persona.
+    PVector getDireccionDeseada() {
+      float y = 0.0;
+    if (posicion.y <= 224) {
+      // Parte superior de la sala
+      y = 224;
+    } else if (224 < posicion.y && posicion.y < 276) {
+      // Frente a la salida
+      y = posicion.y;
     } else {
-      return new PVector(600, 276);
+      // Parte inferior de la sala
+      y = 276;
     }
+    // Dirección salida
+    PVector movimiento = new PVector(600, y);
+    PVector direccionDeseada = PVector.sub(movimiento, posicion);
+    // Vector unitario que no supera la velocidad máxima
+    direccionDeseada.normalize();
+    direccionDeseada.mult(maxVelocidad);
+    return direccionDeseada;
   }
 
-  void checkCollisionsWithPilares() {
-    PVector pilarGrandePos = new PVector(200, 200);
-    float pilarGrandeDiametro = 50;
-    PVector pilarChicoPos = new PVector(380, 280);
-    float pilarChicoDiametro = 30;
+  // Descripción: Aplica las fuerzas de repulsión de paredes y pilares y la fuerza de roce con otras personas que se encuentren en un radio R.
+  void applyRepulsion() {
+    // Radio de la vecindad que permite que otras personas y fuerzas ejerzan fuerzas sobre la persona
+    float R = 25.0;
 
-    // Comprobar colisión con pilar grande
-    if (position.dist(pilarGrandePos) < radius + pilarGrandeDiametro / 2) {
-      PVector direccion = PVector.sub(position, pilarGrandePos);
-      direccion.normalize();
-      position.add(direccion);
-    }
-
-    // Comprobar colisión con pilar chico
-    if (position.dist(pilarChicoPos) < radius + pilarChicoDiametro / 2) {
-      PVector direccion = PVector.sub(position, pilarChicoPos);
-      direccion.normalize();
-      position.add(direccion);
-    }
-  }
-
-  void applyRepulsionBetweenPersons() {
-    float radioInteraccion = 25.0;
-
-    for (Person otraPersona : people) {
-      if (this != otraPersona) {
-        float distancia = position.dist(otraPersona.position);
-
-        if (distancia < radioInteraccion) {
-          PVector direccion = PVector.sub(position, otraPersona.position);
+    // Fuerzas de otras personas
+    for (Persona persona : personas) {
+      if (this != persona) {
+        float distancia = posicion.dist(persona.posicion);
+        // Se encuentra dentro del radio R
+        if (distancia < R) {
+          // Dirección de persona actual a la otra persona
+          PVector direccion = PVector.sub(posicion, persona.posicion);
           direccion.normalize();
-          float factorRepulsion = map(distancia, 0, radioInteraccion, 1, 0); // Cuanto más cerca, mayor repulsión
+          // La fuerza de repulsión es aplicada considerando la distancia a la que se encuentran ambas personas
+          float factorRepulsion = map(distancia, 0, R, 1, 0);
           direccion.mult(factorRepulsion);
-          velocity.add(direccion);
+          velocidad.add(direccion);
         }
       }
     }
+
+    // Repulsión de los pilares
+    PVector pilarG = new PVector(200, 200);
+    PVector pilarC = new PVector(380, 280);
+    PVector direccionPilarG = PVector.sub(posicion, pilarG);
+    PVector direccionPilarC = PVector.sub(posicion, pilarC);
+    float radioPilarG = 25; 
+    float radioPilarC = 15; 
+
+    // Pilar grande
+    if (direccionPilarG.mag() < R + radioPilarG) {
+      float distanciaPilarG = direccionPilarG.mag() - radioPilarG;
+      direccionPilarG.normalize();
+      // La fuerza de repulsión depende de la distancia a la que se encuentre la persona
+      float factorRepulsion = map(distanciaPilarG, 0, R, 1, 0);
+      direccionPilarG.mult(factorRepulsion);
+       velocidad.add(direccionPilarG);
+    }
+
+    // Pilar chico
+    if (direccionPilarC.mag() < R + radioPilarC) {
+      float distanciaPilarC = direccionPilarC.mag() - radioPilarC;
+      direccionPilarC.normalize();
+      float factorRepulsion = map(distanciaPilarC, 0, R, 1, 0);
+      direccionPilarC.mult(factorRepulsion);
+      velocidad.add(direccionPilarC);
+    }    
+
+    // Repulsión de las paredes
+    if (posicion.x < radio + 5) {
+      PVector direccionParedIzquierda = new PVector(1, velocidad.y);
+      direccionParedIzquierda.normalize();
+      float factorRepulsion = map(posicion.x, 0, radio + 5, 0, 1);
+      direccionParedIzquierda.mult(factorRepulsion);
+      velocidad.add(direccionParedIzquierda);
+    }
+
+    if (posicion.y < radio + 5) {
+      PVector direccionParedSuperior = new PVector(velocidad.x, 1);
+      direccionParedSuperior.normalize();
+      float factorRepulsion = map(posicion.y, 0, radio + 5, 0, 1);
+      direccionParedSuperior.mult(factorRepulsion);
+      velocidad.add(direccionParedSuperior);
+    }
+
+    if (posicion.y > height - radio - 5) {
+      PVector direccionParedInferior = new PVector(velocidad.x, -1);
+      direccionParedInferior.normalize();
+      float factorRepulsion = map(posicion.y, height, height - radio - 5, 0, 1);
+      direccionParedInferior.mult(factorRepulsion);
+      velocidad.add(direccionParedInferior);
+    }
+    
   }
-  
+
   boolean isOutsideRoom() {
-    return (position.x > width || position.y < 0 || position.y > height);
+    return (posicion.x > 600);
   }
 }
