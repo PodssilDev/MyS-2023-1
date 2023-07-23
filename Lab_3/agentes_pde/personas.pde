@@ -102,30 +102,35 @@ class Persona {
     }    
 
     // Repulsión de las paredes
-    if (posicion.x < radio + 5) {
-      PVector direccionParedIzquierda = new PVector(1, velocidad.y);
-      direccionParedIzquierda.normalize();
-      float factorRepulsion = map(posicion.x, 0, radio + 5, 0, 1);
-      direccionParedIzquierda.mult(factorRepulsion);
-      velocidad.add(direccionParedIzquierda);
-    }
-
-    if (posicion.y < radio + 5) {
-      PVector direccionParedSuperior = new PVector(velocidad.x, 1);
-      direccionParedSuperior.normalize();
-      float factorRepulsion = map(posicion.y, 0, radio + 5, 0, 1);
-      direccionParedSuperior.mult(factorRepulsion);
-      velocidad.add(direccionParedSuperior);
-    }
-
-    if (posicion.y > height - radio - 5) {
-      PVector direccionParedInferior = new PVector(velocidad.x, -1);
-      direccionParedInferior.normalize();
-      float factorRepulsion = map(posicion.y, height, height - radio - 5, 0, 1);
-      direccionParedInferior.mult(factorRepulsion);
-      velocidad.add(direccionParedInferior);
+    if (distanciaPuntoLinea(posicion.x, posicion.y, 0, 0, 600, 216) < R + 5) {
+      PVector direccionParedS = PVector.sub(posicion, new PVector(0, 0));
+      float distanciaParedS = distanciaPuntoLinea(posicion.x, posicion.y, 0, 0, 600, 216) - 10;
+      direccionParedS.normalize();
+      float factorR = map(distanciaParedS, 0, R, 1, 0);
+      direccionParedS.mult(factorR);
+      velocidad.add(direccionParedS);
     }
     
+    
+    if (distanciaPuntoLinea(posicion.x, posicion.y, 600, 284, 0, 500) < R + 5) {
+      PVector direccionParedI = PVector.sub(posicion, new PVector(0, 500));
+      float distanciaParedI = distanciaPuntoLinea(posicion.x, posicion.y, 600, 284, 0, 500) - 5;
+      direccionParedI.normalize();
+      float factorR = map(distanciaParedI, 0, R, 1, 0);
+      direccionParedI.mult(factorR);
+      velocidad.add(direccionParedI);
+    }
+  }
+  
+  float distanciaPuntoLinea(float x, float y, float x1, float y1, float x2, float y2) {
+  float A = x - x1;
+  float B = y - y1;
+  float C = x2 - x1;
+  float D = y2 - y1;
+
+  float distancia = abs(A * D - C * B) / sqrt(C * C + D * D);
+
+  return distancia;
   }
 
   boolean isOutsideRoom() {
