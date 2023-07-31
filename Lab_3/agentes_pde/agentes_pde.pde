@@ -36,6 +36,7 @@ void draw() {
     persona.update();
      ellipse(persona.posicion.x, persona.posicion.y, 7.5, 7.5);
 
+
     // Verificar si la persona está fuera de la sala y eliminarla del array
     if (persona.isOutsideRoom()) {
       personas.remove(i);

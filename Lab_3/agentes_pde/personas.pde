@@ -57,21 +57,23 @@ class Persona {
     // Radio de la vecindad que permite que otras personas y fuerzas ejerzan fuerzas sobre la persona
     float R = 25.0;
 
-    // Fuerzas de otras personas
-    for (Persona persona : personas) {
-      if (this != persona) {
-        float distancia = posicion.dist(persona.posicion);
-        // Se encuentra dentro del radio R
-        if (distancia < R) {
-          // Dirección de persona actual a la otra persona
-          PVector direccion = PVector.sub(posicion, persona.posicion);
-          direccion.normalize();
-          // La fuerza de repulsión es aplicada considerando la distancia a la que se encuentran ambas personas
-          float factorRepulsion = map(distancia, 0, R, 1, 0);
-          direccion.mult(factorRepulsion);
-          velocidad.add(direccion);
-        }
-      }
+    // Repulsión de las paredes
+    if (distanciaPuntoLinea(posicion.x, posicion.y, 0, 0, 600, 216) < R + 5) {
+      PVector direccionParedS = PVector.sub(posicion, new PVector(0, 0));
+      float distanciaParedS = distanciaPuntoLinea(posicion.x, posicion.y, 0, 0, 600, 216) - 5;
+      direccionParedS.normalize();
+      float factorR = map(distanciaParedS, 0, R, 1, 0);
+      direccionParedS.mult(factorR);
+      velocidad.add(direccionParedS);
+    }
+    
+    if (distanciaPuntoLinea(posicion.x, posicion.y, 600, 284, 0, 500) < R + 5) {
+      PVector direccionParedI = PVector.sub(posicion, new PVector(0, 500));
+      float distanciaParedI = distanciaPuntoLinea(posicion.x, posicion.y, 600, 284, 0, 500) - 5;
+      direccionParedI.normalize();
+      float factorR = map(distanciaParedI, 0, R, 1, 0);
+      direccionParedI.mult(factorR);
+      velocidad.add(direccionParedI);
     }
 
     // Repulsión de los pilares
@@ -100,25 +102,21 @@ class Persona {
       direccionPilarC.mult(factorRepulsion);
       velocidad.add(direccionPilarC);
     }    
-
-    // Repulsión de las paredes
-    if (distanciaPuntoLinea(posicion.x, posicion.y, 0, 0, 600, 216) < R + 5) {
-      PVector direccionParedS = PVector.sub(posicion, new PVector(0, 0));
-      float distanciaParedS = distanciaPuntoLinea(posicion.x, posicion.y, 0, 0, 600, 216) - 10;
-      direccionParedS.normalize();
-      float factorR = map(distanciaParedS, 0, R, 1, 0);
-      direccionParedS.mult(factorR);
-      velocidad.add(direccionParedS);
-    }
     
-    
-    if (distanciaPuntoLinea(posicion.x, posicion.y, 600, 284, 0, 500) < R + 5) {
-      PVector direccionParedI = PVector.sub(posicion, new PVector(0, 500));
-      float distanciaParedI = distanciaPuntoLinea(posicion.x, posicion.y, 600, 284, 0, 500) - 5;
-      direccionParedI.normalize();
-      float factorR = map(distanciaParedI, 0, R, 1, 0);
-      direccionParedI.mult(factorR);
-      velocidad.add(direccionParedI);
+    for (Persona persona : personas) {
+      if (this != persona) {
+        float distancia = posicion.dist(persona.posicion);
+        // Se encuentra dentro del radio R
+        if (distancia < R && !(distanciaPuntoLinea(posicion.x, posicion.y, 0, 0, 600, 216) < R) && !(distanciaPuntoLinea(posicion.x, posicion.y, 600, 284, 0, 500) < R)) {
+          // Dirección de persona actual a la otra persona
+          PVector direccion = PVector.sub(posicion, persona.posicion);
+          direccion.normalize();
+          // La fuerza de repulsión es aplicada considerando la distancia a la que se encuentran ambas personas
+          float factorRepulsion = map(distancia, 0, R, 1, 0);
+          direccion.mult(factorRepulsion);
+          velocidad.add(direccion);
+        }
+      }
     }
   }
   
@@ -127,13 +125,11 @@ class Persona {
   float B = y - y1;
   float C = x2 - x1;
   float D = y2 - y1;
-
   float distancia = abs(A * D - C * B) / sqrt(C * C + D * D);
-
   return distancia;
   }
 
   boolean isOutsideRoom() {
-    return (posicion.x > 600);
+    return (posicion.x > 650);
   }
 }
