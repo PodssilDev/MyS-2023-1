@@ -58,19 +58,25 @@ class Persona {
     float R = 25.0;
 
     // Repulsión de las paredes
-    if (distanciaPuntoLinea(posicion.x, posicion.y, 0, 0, 600, 216) < R + 5) {
+    // Si la persona está cerca de la pared superior
+    if (distanciaPuntoLinea(posicion.x, posicion.y, 0, 0, 600, 216) < R + radio) {
       PVector direccionParedS = PVector.sub(posicion, new PVector(0, 0));
-      float distanciaParedS = distanciaPuntoLinea(posicion.x, posicion.y, 0, 0, 600, 216) - 5;
+      // Calcula la distancia desde la posición actual de la persona hasta la pared superior, restando el radio de la persona
+      float distanciaParedS = distanciaPuntoLinea(posicion.x, posicion.y, 0, 0, 600, 216) - radio;
       direccionParedS.normalize();
+      // Calcula la fuerza de repulsión ejercida dependiendo de la distancia a la cual se encuentra la persona
       float factorR = map(distanciaParedS, 0, R, 1, 0);
       direccionParedS.mult(factorR);
       velocidad.add(direccionParedS);
     }
     
+    // Si la persona está cerca de la pared inferior
     if (distanciaPuntoLinea(posicion.x, posicion.y, 600, 284, 0, 500) < R + 5) {
       PVector direccionParedI = PVector.sub(posicion, new PVector(0, 500));
-      float distanciaParedI = distanciaPuntoLinea(posicion.x, posicion.y, 600, 284, 0, 500) - 5;
+      // Calcula la distancia desde la posición actual de la persona hasta la pared inferior, restando el radio de la persona
+      float distanciaParedI = distanciaPuntoLinea(posicion.x, posicion.y, 600, 284, 0, 500) - radio;
       direccionParedI.normalize();
+      // Calcula la fuerza de repulsión ejercida dependiendo de la distancia a la cual se encuentra la persona
       float factorR = map(distanciaParedI, 0, R, 1, 0);
       direccionParedI.mult(factorR);
       velocidad.add(direccionParedI);
@@ -84,7 +90,7 @@ class Persona {
     float radioPilarG = 25; 
     float radioPilarC = 15; 
 
-    // Pilar grande
+    // Si la persona está cerca del pilar grande
     if (direccionPilarG.mag() < R + radioPilarG) {
       float distanciaPilarG = direccionPilarG.mag() - radioPilarG;
       direccionPilarG.normalize();
@@ -98,15 +104,17 @@ class Persona {
     if (direccionPilarC.mag() < R + radioPilarC) {
       float distanciaPilarC = direccionPilarC.mag() - radioPilarC;
       direccionPilarC.normalize();
+      // La fuerza de repulsión depende de la distancia a la que se encuentre la persona
       float factorRepulsion = map(distanciaPilarC, 0, R, 1, 0);
       direccionPilarC.mult(factorRepulsion);
       velocidad.add(direccionPilarC);
     }    
     
+    // Repulsión entre personas
     for (Persona persona : personas) {
       if (this != persona) {
         float distancia = posicion.dist(persona.posicion);
-        // Se encuentra dentro del radio R
+        // Se encuentra dentro del radio R y no atraviesa las paredes
         if (distancia < R && !(distanciaPuntoLinea(posicion.x, posicion.y, 0, 0, 600, 216) < R) && !(distanciaPuntoLinea(posicion.x, posicion.y, 600, 284, 0, 500) < R)) {
           // Dirección de persona actual a la otra persona
           PVector direccion = PVector.sub(posicion, persona.posicion);
@@ -120,15 +128,20 @@ class Persona {
     }
   }
   
+// Descripción: Calcula la distancia de un punto (x, y) a una línea definida por dos puntos (x1, y1) y (x2, y2).
+// Entrada: Coordenadas del punto (x, y) y las coordenadas de los dos puntos que definen la línea (x1, y1) y (x2, y2).
+// Salida: Distancia del punto a la línea.
   float distanciaPuntoLinea(float x, float y, float x1, float y1, float x2, float y2) {
-  float A = x - x1;
-  float B = y - y1;
-  float C = x2 - x1;
-  float D = y2 - y1;
-  float distancia = abs(A * D - C * B) / sqrt(C * C + D * D);
-  return distancia;
+    float A = x - x1;
+    float B = y - y1;
+    float C = x2 - x1;
+    float D = y2 - y1;
+    float distancia = abs(A * D - C * B) / sqrt(C * C + D * D);
+    return distancia;
   }
 
+// Descripción: Verifica si la persona se encuentra fuera de la sala.
+// Salida: true si la persona está fuera de la sala, false si no lo está.
   boolean isOutsideRoom() {
     return (posicion.x > 650);
   }
